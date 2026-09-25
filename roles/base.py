@@ -36,7 +36,6 @@ class BaseRoleClient:
 
         self.client: Optional[Client] = None
         self._ready_event = asyncio.Event()
-        self._listen_task: Optional[asyncio.Task] = None
         self._running = False
 
         # Registro dei messaggi ricevuti: lista di dizionari {"schema": ..., "params": ...}

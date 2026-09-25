@@ -144,15 +144,15 @@ async def run_choreography_scenario():
         print("=" * 75)
 
         print("\n[BUYER RELATIONS SULL'HUB]:")
-        for rel_name, table in hub.adapter._get_role_tables(ROLE_BUYER).items():
+        for rel_name, table in hub.adapter.get_role_relations(ROLE_BUYER).items():
             print(f"  R({rel_name}): {json.dumps(table.get(tx_id, {}), ensure_ascii=False)}")
 
         print("\n[SELLER RELATIONS SULL'HUB]:")
-        for rel_name, table in hub.adapter._get_role_tables(ROLE_SELLER).items():
+        for rel_name, table in hub.adapter.get_role_relations(ROLE_SELLER).items():
             print(f"  R({rel_name}): {json.dumps(table.get(tx_id, {}), ensure_ascii=False)}")
 
         print("\n[SHIPPER RELATIONS SULL'HUB]:")
-        for rel_name, table in hub.adapter._get_role_tables(ROLE_SHIPPER).items():
+        for rel_name, table in hub.adapter.get_role_relations(ROLE_SHIPPER).items():
             print(f"  R({rel_name}): {json.dumps(table.get(tx_id, {}), ensure_ascii=False)}")
         print("=" * 75)
 

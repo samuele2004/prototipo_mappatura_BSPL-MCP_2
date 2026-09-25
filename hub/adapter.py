@@ -29,7 +29,7 @@ class BSPLHubAdapter:
         # Mappa delle relazioni LoST: role -> schema_name -> transaction_ID -> { param_name: param_value }
         self.role_relations: Dict[str, Dict[str, Dict[str, Dict[str, Any]]]] = {}
 
-    def _get_role_tables(self, role: str) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    def get_role_relations(self, role: str) -> Dict[str, Dict[str, Dict[str, Any]]]:
         """Restituisce le relazioni relazionali associate al ruolo specificato."""
         return self.role_relations.setdefault(role, {})
 
@@ -38,7 +38,7 @@ class BSPLHubAdapter:
         Verifica se il parametro indicato è già vincolato in una qualsiasi delle
         relazioni locali del ruolo specificato per la transazione identificata da ID.
         """
-        tables = self._get_role_tables(role)
+        tables = self.get_role_relations(role)
         for table in tables.values():
             if ID in table and param in table[ID]:
                 return True
@@ -49,7 +49,7 @@ class BSPLHubAdapter:
         Restituisce il valore del parametro se già vincolato in una qualsiasi delle
         relazioni locali del ruolo specificato per l'ID indicato, altrimenti None.
         """
-        tables = self._get_role_tables(role)
+        tables = self.get_role_relations(role)
         for table in tables.values():
             if ID in table and param in table[ID]:
                 return table[ID][param]
@@ -107,16 +107,20 @@ class BSPLHubAdapter:
     def is_duplicate(self, role: str, schema: str, ID: str, params: Dict[str, Any]) -> bool:
         """
         Verifica se la tupla del messaggio è un duplicato idempotente già registrato in R(schema) per il ruolo.
+        Se params contiene un sottoinsieme di parametri (es. i soli parametri [out]), verifica che per
+        quell'ID tutti i valori indicati coincidano esattamente con quelli già memorizzati.
         """
-        tables = self._get_role_tables(role)
+        tables = self.get_role_relations(role)
         table = tables.get(schema, {})
-        return ID in table and table[ID] == params
+        if ID not in table:
+            return False
+        return all(table[ID].get(k) == v for k, v in params.items())
 
     def insert_relation(self, role: str, schema: str, ID: str, params: Dict[str, Any]):
         """
         Inserisce la tupla convalidata all'interno della relazione locale R(schema) del ruolo indicato.
         """
-        tables = self._get_role_tables(role)
+        tables = self.get_role_relations(role)
         if schema not in tables:
             tables[schema] = {}
         tables[schema][ID] = dict(params)
@@ -125,7 +129,7 @@ class BSPLHubAdapter:
         """
         Rimuove una tupla da R(schema) per il ruolo indicato in caso di errore (rollback).
         """
-        tables = self._get_role_tables(role)
+        tables = self.get_role_relations(role)
         if schema in tables and ID in tables[schema]:
             del tables[schema][ID]
 
@@ -134,7 +138,7 @@ class BSPLHubAdapter:
         Restituisce la storia locale H_x (le tuple delle relazioni locali popolate)
         per il ruolo specificato e per una data transazione ID.
         """
-        tables = self._get_role_tables(role)
+        tables = self.get_role_relations(role)
         return {
             schema: dict(table[ID])
             for schema, table in tables.items()
@@ -145,7 +149,8 @@ class BSPLHubAdapter:
         """
         Restituisce l'History Vector distribuito H = [H_x1, ..., H_xn] per l'ID specificato.
         """
+        from config import ROLES
         return {
             role: self.get_history(role, ID)
-            for role in self.role_relations
+            for role in ROLES
         }

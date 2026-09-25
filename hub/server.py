@@ -36,7 +36,6 @@ from config import (
     get_inbox_uri,
 )
 from hub.adapter import BSPLHubAdapter
-from hub.exceptions import BSPLViabilityError
 
 logger = logging.getLogger("CentralHubServer")
 
@@ -137,6 +136,11 @@ class CentralHubServer:
             """
             logger.info(f"[Hub] Ricevuta invocazione Tool 'quote': ID={ID!r}, price={price}")
 
+            # Controllo duplicati idempotenti prima della verifica di viabilità
+            if self.adapter.is_duplicate(ROLE_SELLER, "quote", ID, {"price": price}):
+                logger.info(f"[Hub] Messaggio 'quote' già registrato per ID={ID!r} (duplicato idempotente)")
+                return f"Messaggio 'quote' già registrato per ID={ID}."
+
             # Verifica di viabilità LoST sullo stato del Seller (ID e item devono essere noti, price deve essere out)
             in_values = self.adapter.check_viability(
                 role=ROLE_SELLER,
@@ -145,11 +149,6 @@ class CentralHubServer:
                 out_params=["price"],
             )
             params = {**in_values, "price": price}
-
-            # Controllo duplicati idempotenti
-            if self.adapter.is_duplicate(ROLE_SELLER, "quote", ID, params):
-                logger.info(f"[Hub] Messaggio 'quote' già registrato per ID={ID!r} (duplicato idempotente)")
-                return f"Messaggio 'quote' già registrato per ID={ID}."
 
             # Inserimento nella relazione locale del mittente
             self.adapter.insert_relation(ROLE_SELLER, "quote", ID, params)
@@ -178,6 +177,11 @@ class CentralHubServer:
             """
             logger.info(f"[Hub] Ricevuta invocazione Tool 'accept': ID={ID!r}, address={address!r}, response={response!r}")
 
+            # Controllo duplicati idempotenti prima della verifica di viabilità
+            if self.adapter.is_duplicate(ROLE_BUYER, "accept", ID, {"address": address, "response": response}):
+                logger.info(f"[Hub] Messaggio 'accept' già registrato per ID={ID!r} (duplicato idempotente)")
+                return f"Messaggio 'accept' già registrato per ID={ID}."
+
             # Verifica di viabilità LoST sullo stato del Buyer
             in_values = self.adapter.check_viability(
                 role=ROLE_BUYER,
@@ -186,11 +190,6 @@ class CentralHubServer:
                 out_params=["address", "response"],
             )
             params = {**in_values, "address": address, "response": response}
-
-            # Controllo duplicati idempotenti
-            if self.adapter.is_duplicate(ROLE_BUYER, "accept", ID, params):
-                logger.info(f"[Hub] Messaggio 'accept' già registrato per ID={ID!r} (duplicato idempotente)")
-                return f"Messaggio 'accept' già registrato per ID={ID}."
 
             # Inserimento nella relazione locale del mittente
             self.adapter.insert_relation(ROLE_BUYER, "accept", ID, params)
@@ -219,6 +218,11 @@ class CentralHubServer:
             """
             logger.info(f"[Hub] Ricevuta invocazione Tool 'reject': ID={ID!r}, outcome={outcome!r}, response={response!r}")
 
+            # Controllo duplicati idempotenti prima della verifica di viabilità
+            if self.adapter.is_duplicate(ROLE_BUYER, "reject", ID, {"outcome": outcome, "response": response}):
+                logger.info(f"[Hub] Messaggio 'reject' già registrato per ID={ID!r} (duplicato idempotente)")
+                return f"Messaggio 'reject' già registrato per ID={ID}."
+
             # Verifica di viabilità LoST sullo stato del Buyer
             in_values = self.adapter.check_viability(
                 role=ROLE_BUYER,
@@ -227,11 +231,6 @@ class CentralHubServer:
                 out_params=["outcome", "response"],
             )
             params = {**in_values, "outcome": outcome, "response": response}
-
-            # Controllo duplicati idempotenti
-            if self.adapter.is_duplicate(ROLE_BUYER, "reject", ID, params):
-                logger.info(f"[Hub] Messaggio 'reject' già registrato per ID={ID!r} (duplicato idempotente)")
-                return f"Messaggio 'reject' già registrato per ID={ID}."
 
             # Inserimento nella relazione locale del mittente
             self.adapter.insert_relation(ROLE_BUYER, "reject", ID, params)
@@ -259,6 +258,11 @@ class CentralHubServer:
             """
             logger.info(f"[Hub] Ricevuta invocazione Tool 'ship': ID={ID!r}")
 
+            # Controllo duplicati idempotenti prima della verifica di viabilità
+            if self.adapter.is_duplicate(ROLE_SELLER, "ship", ID, {}):
+                logger.info(f"[Hub] Messaggio 'ship' già registrato per ID={ID!r} (duplicato idempotente)")
+                return f"Messaggio 'ship' già registrato per ID={ID}."
+
             # Verifica di viabilità LoST sullo stato del Seller
             in_values = self.adapter.check_viability(
                 role=ROLE_SELLER,
@@ -267,11 +271,6 @@ class CentralHubServer:
                 out_params=[],
             )
             params = dict(in_values)
-
-            # Controllo duplicati idempotenti
-            if self.adapter.is_duplicate(ROLE_SELLER, "ship", ID, params):
-                logger.info(f"[Hub] Messaggio 'ship' già registrato per ID={ID!r} (duplicato idempotente)")
-                return f"Messaggio 'ship' già registrato per ID={ID}."
 
             # Inserimento nella relazione locale del mittente
             self.adapter.insert_relation(ROLE_SELLER, "ship", ID, params)
@@ -299,6 +298,11 @@ class CentralHubServer:
             """
             logger.info(f"[Hub] Ricevuta invocazione Tool 'deliver': ID={ID!r}, outcome={outcome!r}")
 
+            # Controllo duplicati idempotenti prima della verifica di viabilità
+            if self.adapter.is_duplicate(ROLE_SHIPPER, "deliver", ID, {"outcome": outcome}):
+                logger.info(f"[Hub] Messaggio 'deliver' già registrato per ID={ID!r} (duplicato idempotente)")
+                return f"Messaggio 'deliver' già registrato per ID={ID}."
+
             # Verifica di viabilità LoST sullo stato dello Shipper
             in_values = self.adapter.check_viability(
                 role=ROLE_SHIPPER,
@@ -307,11 +311,6 @@ class CentralHubServer:
                 out_params=["outcome"],
             )
             params = {**in_values, "outcome": outcome}
-
-            # Controllo duplicati idempotenti
-            if self.adapter.is_duplicate(ROLE_SHIPPER, "deliver", ID, params):
-                logger.info(f"[Hub] Messaggio 'deliver' già registrato per ID={ID!r} (duplicato idempotente)")
-                return f"Messaggio 'deliver' già registrato per ID={ID}."
 
             # Inserimento nella relazione locale del mittente
             self.adapter.insert_relation(ROLE_SHIPPER, "deliver", ID, params)

@@ -6,11 +6,7 @@ di restituire automaticamente al client chiamante una risposta JSON-RPC con isEr
 e il messaggio di errore descrittivo nel payload.
 """
 
-try:
-    from mcp.server.mcpserver.exceptions import ToolError
-except ImportError:
-    class ToolError(Exception):  # type: ignore[no-redef]
-        pass
+from mcp.server.mcpserver.exceptions import ToolError
 
 
 class BSPLProtocolError(ToolError):

@@ -243,7 +243,7 @@ async def test_get_next_message_empty_queue(running_environment):
     async with Client(HUB_URL) as client:
         res = await client.call_tool("get_next_message", {"role": ROLE_BUYER})
         assert res.is_error is False
-        assert "empty" in str(res.content).lower() or "nessun messaggio" in str(res.content).lower()
+        assert not res.content or len(res.content) == 0
 
 
 @pytest.mark.asyncio

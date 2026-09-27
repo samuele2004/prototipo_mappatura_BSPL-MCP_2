@@ -129,7 +129,7 @@ class BaseRoleClient:
                 logger.warning(f"[{self.name}] Impossibile parsare output di get_next_message: {text_data}")
                 break
 
-            if data.get("status") != "ok":
+            if not data or "schema" not in data or "params" not in data:
                 break
 
             schema = data["schema"]

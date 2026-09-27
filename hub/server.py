@@ -328,16 +328,17 @@ class CentralHubServer:
         @self.server.tool()
         async def get_next_message(
             role: Annotated[str, Field(description="Ruolo del client che richiede il messaggio dalla propria coda inbox")],
-        ) -> Dict[str, Any]:
+        ) -> Optional[Dict[str, Any]]:
             """
             Estrae il prossimo messaggio in testa alla coda del ruolo chiamante.
             Al momento dell'estrazione, la tupla del messaggio viene registrata
             nello stato relazionale locale del destinatario all'interno dell'adattatore.
+            Restituisce un dizionario con schema e parametri, oppure None se la coda è vuota.
             """
             queue = self.message_queues.get(role)
             if queue is None or len(queue) == 0:
                 logger.debug(f"[Hub] Nessun messaggio in coda per il ruolo {role!r}")
-                return {"status": "empty", "message": f"Nessun messaggio in coda per {role}."}
+                return None
 
             msg = queue.popleft()
             schema = msg["schema"]
@@ -352,7 +353,6 @@ class CentralHubServer:
             )
 
             return {
-                "status": "ok",
                 "schema": schema,
                 "params": params,
             }

@@ -119,25 +119,28 @@ class BaseRoleClient:
                 logger.error(f"[{self.name}] Errore durante get_next_message: {res.content}")
                 break
 
-            if not res.content or len(res.content) == 0:
+            data = None
+            if res.structured_content:
+                data = res.structured_content.get("result")
+            elif res.content and len(res.content) > 0 and res.content[0].text:
+                try:
+                    data = json.loads(res.content[0].text)
+                except Exception:
+                    logger.warning(f"[{self.name}] Impossibile parsare output di get_next_message: {res.content[0].text}")
+                    break
+
+            if not data or not isinstance(data, dict):
                 break
 
-            text_data = res.content[0].text
-            try:
-                data = json.loads(text_data)
-            except Exception:
-                logger.warning(f"[{self.name}] Impossibile parsare output di get_next_message: {text_data}")
+            schema = data.get("schema")
+            params = data.get("params")
+            if not schema or params is None:
                 break
 
-            if not data or "schema" not in data or "params" not in data:
-                break
-
-            schema = data["schema"]
-            params = data["params"]
-            tx_id = params.get("ID", "")
+            msg_id = params.get("ID", "")
             self.received_messages.append({"schema": schema, "params": params})
-            logger.info(f"[{self.name}] Ricevuto messaggio '{schema}' per ID={tx_id!r}: {params}")
-            self._notify_message_received(schema, tx_id)
+            logger.info(f"[{self.name}] Ricevuto messaggio '{schema}' per ID={msg_id!r}: {params}")
+            self._notify_message_received(schema, msg_id)
 
     async def call_hub_tool(self, name: str, params: Dict[str, Any]) -> Any:
         """

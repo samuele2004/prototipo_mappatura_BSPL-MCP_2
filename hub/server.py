@@ -20,7 +20,7 @@ In questa architettura a stella (Modello 2 della tesi):
 import asyncio
 from collections import deque
 import logging
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional, TypedDict
 from pydantic import Field
 import uvicorn
 from mcp.server import MCPServer
@@ -38,6 +38,12 @@ from config import (
 from hub.adapter import BSPLHubAdapter
 
 logger = logging.getLogger("CentralHubServer")
+
+
+class MessagePayload(TypedDict):
+    """Rappresentazione tipata del messaggio estratto dalla coda inbox dell'hub."""
+    schema: Annotated[str, Field(description="Nome dello schema BSPL del messaggio")]
+    params: Annotated[Dict[str, Any], Field(description="Parametri associati al messaggio")]
 
 
 class CentralHubServer:
@@ -328,12 +334,12 @@ class CentralHubServer:
         @self.server.tool()
         async def get_next_message(
             role: Annotated[str, Field(description="Ruolo del client che richiede il messaggio dalla propria coda inbox")],
-        ) -> Optional[Dict[str, Any]]:
+        ) -> Optional[MessagePayload]:
             """
             Estrae il prossimo messaggio in testa alla coda del ruolo chiamante.
             Al momento dell'estrazione, la tupla del messaggio viene registrata
             nello stato relazionale locale del destinatario all'interno dell'adattatore.
-            Restituisce un dizionario con schema e parametri, oppure None se la coda è vuota.
+            Restituisce un payload tipato con schema e parametri, oppure None se la coda è vuota.
             """
             queue = self.message_queues.get(role)
             if queue is None or len(queue) == 0:

@@ -1,6 +1,6 @@
 # Prototipo: Mappatura BSPL su MCP (Modello a Hub Centrale)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23025732.svg)](https://doi.org/10.5281/zenodo.23025732)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23025731.svg)](https://doi.org/10.5281/zenodo.23025731)
 ![GitHub License](https://img.shields.io/github/license/samuele2004/prototipo_mappatura_BSPL-MCP_2)
 
 Questo repository contiene il prototipo di riferimento per la mappatura del protocollo BSPL **`PurchaseWithDelivery`** sull'infrastruttura **Model Context Protocol (MCP)**, utilizzando l'SDK ufficiale per Python (`mcp>=2.0.0`) su trasporto **Streamable HTTP**.
